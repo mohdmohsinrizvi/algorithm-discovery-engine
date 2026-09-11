@@ -1,0 +1,25 @@
+problem:
+  type: sorting_network
+  n: 5
+
+search:
+  algorithm: evolutionary
+  population_size: 50
+  generations: 100
+  mutation_rate: 0.15
+  crossover_rate: 0.7
+  elitism_rate: 0.05
+
+objectives:
+  - comparator_count
+  - depth
+
+verification:
+  backend: exhaustive
+
+benchmark:
+  enabled: true
+  repetitions: 100
+
+seed: 42
+mode: demo

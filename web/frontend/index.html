@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algorithm Discovery Lab</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e17;--bg2:#111827;--bg3:#1a2332;--bg4:#243044;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --accent:#22d3ee;--accent2:#06b6d4;--green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --border:#1e293b;--mono:'JetBrains Mono','Fira Code',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre,.mono{font-family:var(--mono)}
+
+/* Navigation */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100}
+nav .logo{font-weight:700;font-size:1.1rem;color:var(--accent);letter-spacing:-0.02em}
+nav .logo span{color:var(--text3);font-weight:400;margin-left:0.5rem;font-size:0.8rem}
+nav .links{margin-left:auto;display:flex;gap:1.5rem}
+nav .links a{color:var(--text2);font-size:0.85rem;font-weight:500;transition:color 0.15s}
+nav .links a:hover,nav .links a.active{color:var(--accent);text-decoration:none}
+
+/* Layout */
+.container{max-width:1400px;margin:0 auto;padding:2rem}
+.grid{display:grid;gap:1.5rem}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.5rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity 0.3s}
+.card:hover::before{opacity:1}
+.card h3{font-size:0.95rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1rem;font-weight:600}
+.card .value{font-size:2rem;font-weight:700;color:var(--text);font-family:var(--mono)}
+.card .label{font-size:0.8rem;color:var(--text3);margin-top:0.25rem}
+
+/* Forms */
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:0.8rem;color:var(--text2);margin-bottom:0.4rem;font-weight:500;text-transform:uppercase;letter-spacing:0.03em}
+input,select{width:100%;padding:0.6rem 0.8rem;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.9rem;font-family:var(--mono);transition:border-color 0.15s}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.btn{padding:0.7rem 1.5rem;border:none;border-radius:6px;font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.btn-primary{background:var(--accent);color:var(--bg)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+
+/* Status */
+.status{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.8rem;padding:0.25rem 0.6rem;border-radius:4px;font-weight:500}
+.status-verified{background:rgba(16,185,129,0.15);color:var(--green)}
+.status-unverified{background:rgba(245,158,11,0.15);color:var(--amber)}
+.status-failed{background:rgba(239,68,68,0.15);color:var(--red)}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:0.85rem}
+th{text-align:left;padding:0.7rem;color:var(--text3);font-weight:600;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.05em;border-bottom:1px solid var(--border)}
+td{padding:0.7rem;border-bottom:1px solid var(--border);color:var(--text2)}
+tr:hover td{background:var(--bg3)}
+
+/* Network visualization */
+.network-viz{padding:1rem;background:var(--bg);border-radius:6px;font-family:var(--mono);font-size:0.85rem;line-height:1.8;overflow-x:auto;white-space:pre;color:var(--text2)}
+
+/* Log */
+.log{background:var(--bg);border-radius:6px;padding:1rem;font-family:var(--mono);font-size:0.8rem;max-height:400px;overflow-y:auto;line-height:1.6}
+.log .event{padding:0.2rem 0}
+.log .time{color:var(--text3)}
+.log .gen{color:var(--accent)}
+.log .best{color:var(--green);font-weight:600}
+.log .archive{color:var(--amber)}
+
+/* Section headers */
+h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.5rem}
+h2{font-size:1.2rem;font-weight:600;color:var(--text2);margin-bottom:1.5rem}
+.subtitle{color:var(--text3);font-size:0.9rem;margin-bottom:2rem}
+.page{display:none}
+.page.active{display:block}
+
+/* Spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Hero */
+.hero{text-align:center;padding:4rem 2rem 2rem}
+.hero h1{font-size:2.5rem;letter-spacing:-0.03em}
+.hero .tagline{font-size:1.1rem;color:var(--text2);margin:1rem 0 2rem}
+.hero .search-flow{display:flex;align-items:center;justify-content:center;gap:1rem;font-family:var(--mono);font-size:0.9rem;color:var(--text3)}
+.hero .search-flow .arrow{color:var(--accent)}
+
+/* Badge */
+.badge{font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.badge-gold{background:rgba(245,158,11,0.2);color:var(--amber)}
+.badge-cyan{background:rgba(34,211,238,0.2);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">ADL<span>v0.1.0</span></div>
+  <div class="links">
+    <a href="#" onclick="showPage('home')" class="active" id="nav-home">Home</a>
+    <a href="#" onclick="showPage('lab')" id="nav-lab">Lab</a>
+    <a href="#" onclick="showPage('museum')" id="nav-museum">Museum</a>
+    <a href="#" onclick="showPage('verify')" id="nav-verify">Verify</a>
+    <a href="#" onclick="showPage('experiments')" id="nav-experiments">Experiments</a>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <h1>Algorithm Discovery Lab</h1>
+    <p class="tagline">Autonomous algorithm discovery, formal verification & benchmarking</p>
+    <div class="search-flow">
+      <span>Search</span><span class="arrow">→</span>
+      <span>Verify</span><span class="arrow">→</span>
+      <span>Benchmark</span><span class="arrow">→</span>
+      <span>Discover</span>
+    </div>
+  </div>
+  <div class="container">
+    <div class="grid grid-3" id="stats-grid">
+      <div class="card">
+        <h3>Experiments</h3>
+        <div class="value" id="stat-experiments">0</div>
+        <div class="label">Total run</div>
+      </div>
+      <div class="card">
+        <h3>Discoveries</h3>
+        <div class="value" id="stat-discoveries">0</div>
+        <div class="label">Verified candidates</div>
+      </div>
+      <div class="card">
+        <h3>System</h3>
+        <div class="value mono" style="font-size:1rem">Ready</div>
+        <div class="label" id="stat-platform">-</div>
+      </div>
+    </div>
+    <h2 style="margin-top:2rem">Recent Discoveries</h2>
+    <div id="recent-discoveries"></div>
+  </div>
+</div>
+
+<!-- LAB -->
+<div id="page-lab" class="page">
+  <div class="container">
+    <h1>Discovery Lab</h1>
+    <p class="subtitle">Configure and launch a search experiment</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Configuration</h3>
+        <div class="form-group">
+          <label>Problem</label>
+          <select id="cfg-problem"><option value="sorting_network">Sorting Network</option></select>
+        </div>
+        <div class="form-group">
+          <label>Input size (n)</label>
+          <input type="number" id="cfg-n" value="8" min="2" max="16">
+        </div>
+        <div class="form-group">
+          <label>Search algorithm</label>
+          <select id="cfg-search">
+            <option value="evolutionary">Evolutionary</option>
+            <option value="random">Random Search</option>
+            <option value="map_elites">MAP-Elites</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Population size</label>
+          <input type="number" id="cfg-pop" value="200" min="10" max="5000">
+        </div>
+        <div class="form-group">
+          <label>Generations</label>
+          <input type="number" id="cfg-gen" value="500" min="10" max="10000">
+        </div>
+        <div class="form-group">
+          <label>Mutation rate</label>
+          <input type="number" id="cfg-mut" value="0.15" min="0" max="1" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Crossover rate</label>
+          <input type="number" id="cfg-cross" value="0.7" min="0" max="1" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Elitism rate</label>
+          <input type="number" id="cfg-elitism" value="0.05" min="0" max="1" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Random seed</label>
+          <input type="number" id="cfg-seed" value="42">
+        </div>
+        <div class="form-group">
+          <label>Benchmark repetitions</label>
+          <input type="number" id="cfg-bench" value="1000" min="10" max="10000">
+        </div>
+        <button class="btn btn-primary" id="btn-run" onclick="runExperiment()">Run Experiment</button>
+      </div>
+      <div class="card">
+        <h3>Live Output</h3>
+        <div class="log" id="live-log">
+          <div class="event"><span class="time">Ready</span> — Configure and click Run</div>
+        </div>
+        <div id="lab-result" style="margin-top:1rem"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MUSEUM -->
+<div id="page-museum" class="page">
+  <div class="container">
+    <h1>Discovery Museum</h1>
+    <p class="subtitle">Searchable archive of verified discoveries</p>
+    <div id="museum-content"></div>
+  </div>
+</div>
+
+<!-- VERIFY -->
+<div id="page-verify" class="page">
+  <div class="container">
+    <h1>Verification Console</h1>
+    <p class="subtitle">Verify a sorting network exhaustively</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Input</h3>
+        <div class="form-group">
+          <label>n (wires)</label>
+          <input type="number" id="verify-n" value="5" min="2" max="16">
+        </div>
+        <div class="form-group">
+          <label>Comparators (JSON: [{"i":0,"j":1}, ...])</label>
+          <textarea id="verify-comps" style="width:100%;height:150px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:0.85rem;padding:0.8rem" placeholder='[{"i":0,"j":1},{"i":1,"j":2}]'></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="verifyCandidate()">Verify</button>
+      </div>
+      <div class="card">
+        <h3>Result</h3>
+        <div id="verify-result">
+          <div class="event" style="color:var(--text3)">Enter a network and click Verify</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPERIMENTS -->
+<div id="page-experiments" class="page">
+  <div class="container">
+    <h1>Experiments</h1>
+    <p class="subtitle">Past experiment runs</p>
+    <div id="experiments-list"></div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('nav .links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('nav-' + id)?.classList.add('active');
+  if (id === 'home') loadHome();
+  if (id === 'museum') loadMuseum();
+  if (id === 'experiments') loadExperiments();
+}
+
+async function loadHome() {
+  try {
+    const r = await fetch(API + '/stats');
+    const s = await r.json();
+    document.getElementById('stat-experiments').textContent = s.total_experiments;
+    document.getElementById('stat-discoveries').textContent = s.total_discoveries;
+    document.getElementById('stat-platform').textContent = s.hardware?.python || '-';
+  } catch(e) {}
+
+  try {
+    const r = await fetch(API + '/discoveries');
+    const d = await r.json();
+    const el = document.getElementById('recent-discoveries');
+    if (!d.discoveries?.length) {
+      el.innerHTML = '<div class="card"><p style="color:var(--text3)">No discoveries yet. Run an experiment in the Lab.</p></div>';
+      return;
+    }
+    el.innerHTML = '<table><tr><th>ID</th><th>Problem</th><th>Comparators</th><th>Depth</th><th>Verified</th></tr>' +
+      d.discoveries.slice(0, 10).map(d => {
+        const m = JSON.parse(d.cost_metrics || '{}');
+        const v = JSON.parse(d.verification_result || '{}');
+        return `<tr><td class="mono">${d.id}</td><td>${d.problem}</td><td>${m.comparator_count ?? '?'}</td><td>${m.depth ?? '?'}</td><td><span class="status ${v.verified ? 'status-verified' : 'status-unverified'}">${v.verified ? 'Verified' : 'Pending'}</span></td></tr>`;
+      }).join('') + '</table>';
+  } catch(e) {}
+}
+
+async function runExperiment() {
+  const btn = document.getElementById('btn-run');
+  const log = document.getElementById('live-log');
+  const result = document.getElementById('lab-result');
+  btn.disabled = true;
+  btn.textContent = 'Running...';
+  log.innerHTML = '<div class="event"><div class="spinner"></div> Starting search...</div>';
+  result.innerHTML = '';
+
+  const body = {
+    n: +document.getElementById('cfg-n').value,
+    search: document.getElementById('cfg-search').value,
+    population: +document.getElementById('cfg-pop').value,
+    generations: +document.getElementById('cfg-gen').value,
+    mutation_rate: +document.getElementById('cfg-mut').value,
+    crossover_rate: +document.getElementById('cfg-cross').value,
+    elitism_rate: +document.getElementById('cfg-elitism').value,
+    seed: +document.getElementById('cfg-seed').value,
+    benchmark_reps: +document.getElementById('cfg-bench').value,
+  };
+
+  try {
+    const r = await fetch(API + '/experiments', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+
+    log.innerHTML = '';
+    const events = data.result?.events || [];
+    events.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'event';
+      if (e.event_type === 'generation_completed') {
+        div.innerHTML = `<span class="gen">Gen ${e.generation}</span> — verified: ${e.data?.total_verified ?? e.data?.archive_size ?? 0}`;
+      } else if (e.event_type === 'new_best_found') {
+        div.innerHTML = `<span class="best">NEW BEST</span> gen=${e.generation} comps=${e.data?.comparator_count} depth=${e.data?.depth}`;
+      } else if (e.event_type === 'archive_updated') {
+        div.innerHTML = `<span class="archive">ARCHIVE</span> gen=${e.generation} coverage=${(e.data?.coverage*100).toFixed(1)}% size=${e.data?.archive_size}`;
+      }
+      log.appendChild(div);
+    });
+    log.scrollTop = log.scrollHeight;
+
+    if (data.discovery) {
+      const d = data.discovery;
+      result.innerHTML = `<div class="card" style="border-color:var(--green)">
+        <h3 style="color:var(--green)">Discovery: ${d.id}</h3>
+        <p>Problem: ${d.problem}</p>
+        <p>Comparators: ${d.cost_metrics?.comparator_count} | Depth: ${d.cost_metrics?.depth}</p>
+        <p>Verification: ${d.verification_method} (${d.verification_result?.inputs_tested} inputs)</p>
+        <p>Benchmark median: ${d.benchmark_result?.median_ns} ns</p>
+        <p>Elapsed: ${data.elapsed_seconds?.toFixed(1)}s</p>
+      </div>`;
+    } else {
+      result.innerHTML = '<div class="card"><p style="color:var(--amber)">No verified candidate found. Try increasing generations.</p></div>';
+    }
+  } catch(e) {
+    log.innerHTML = `<div class="event" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Run Experiment';
+}
+
+async function loadMuseum() {
+  const el = document.getElementById('museum-content');
+  try {
+    const r = await fetch(API + '/discoveries');
+    const d = await r.json();
+    if (!d.discoveries?.length) {
+      el.innerHTML = '<div class="card"><p style="color:var(--text3)">No discoveries yet.</p></div>';
+      return;
+    }
+    el.innerHTML = '<table><tr><th>ID</th><th>Problem</th><th>Comparators</th><th>Depth</th><th>Verified</th><th>Benchmark</th></tr>' +
+      d.discoveries.map(d => {
+        const m = JSON.parse(d.cost_metrics || '{}');
+        const v = JSON.parse(d.verification_result || '{}');
+        const b = JSON.parse(d.benchmark_result || '{}');
+        return `<tr>
+          <td class="mono">${d.id}</td>
+          <td>${d.problem}</td>
+          <td>${m.comparator_count ?? '?'}</td>
+          <td>${m.depth ?? '?'}</td>
+          <td><span class="status status-verified">Verified</span></td>
+          <td>${b.median_ns ? b.median_ns.toFixed(0) + ' ns' : '-'}</td>
+        </tr>`;
+      }).join('') + '</table>';
+  } catch(e) {
+    el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading museum.</p></div>';
+  }
+}
+
+async function verifyCandidate() {
+  const el = document.getElementById('verify-result');
+  const n = +document.getElementById('verify-n').value;
+  let comps;
+  try {
+    comps = JSON.parse(document.getElementById('verify-comps').value);
+  } catch(e) {
+    el.innerHTML = '<span class="status status-failed">Invalid JSON</span>';
+    return;
+  }
+  el.innerHTML = '<div class="spinner"></div> Verifying...';
+  try {
+    const r = await fetch(API + '/verify', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({n, comparators: comps}),
+    });
+    const data = await r.json();
+    if (data.verified) {
+      el.innerHTML = `<div class="status status-verified" style="font-size:1rem;margin-bottom:1rem">VERIFIED</div>
+        <p>Method: ${data.method}</p>
+        <p>Inputs tested: ${data.inputs_tested}</p>
+        <p>Duration: ${data.duration_ms?.toFixed(2)} ms</p>
+        <p>No counterexample found.</p>`;
+    } else {
+      el.innerHTML = `<div class="status status-failed" style="font-size:1rem;margin-bottom:1rem">FAILED</div>
+        <p>Counterexample: <code>${JSON.stringify(data.counterexample)}</code></p>
+        <p>Inputs tested: ${data.inputs_tested}</p>
+        <p>Failures found: ${data.failures?.length}</p>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<span class="status status-failed">Error: ${e.message}</span>`;
+  }
+}
+
+async function loadExperiments() {
+  const el = document.getElementById('experiments-list');
+  try {
+    const r = await fetch(API + '/experiments');
+    const d = await r.json();
+    if (!d.experiments?.length) {
+      el.innerHTML = '<div class="card"><p style="color:var(--text3)">No experiments yet.</p></div>';
+      return;
+    }
+    el.innerHTML = '<table><tr><th>ID</th><th>Problem</th><th>Status</th><th>Seed</th><th>Created</th></tr>' +
+      d.experiments.map(e => {
+        const t = new Date((e.created_at || 0) * 1000).toLocaleString();
+        return `<tr><td class="mono">${e.id}</td><td>${e.problem_type}</td><td><span class="status ${e.status==='completed'?'status-verified':'status-unverified'}">${e.status}</span></td><td>${e.seed}</td><td>${t}</td></tr>`;
+      }).join('') + '</table>';
+  } catch(e) {
+    el.innerHTML = '<div class="card"><p style="color:var(--red)">Error loading experiments.</p></div>';
+  }
+}
+
+// Load home on start
+loadHome();
+</script>
+</body>
+</html>

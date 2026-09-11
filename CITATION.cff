@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "Algorithm Discovery Lab"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - name: "Algorithm Discovery Lab Contributors"
+repository-code: "https://github.com/yourname/algorithm-discovery-lab"
+license: MIT
