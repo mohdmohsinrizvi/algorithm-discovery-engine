@@ -300,7 +300,7 @@ async function runExperiment() {
   const result = document.getElementById('lab-result');
   btn.disabled = true;
   btn.textContent = 'Running...';
-  log.innerHTML = '<div class="event"><div class="spinner"></div> Starting search...</div>';
+  log.innerHTML = '<div class="event"><div class="spinner"></div> Starting search... (may take 5-30s)</div>';
   result.innerHTML = '';
 
   const body = {
@@ -315,12 +315,17 @@ async function runExperiment() {
     benchmark_reps: +document.getElementById('cfg-bench').value,
   };
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
+
   try {
     const r = await fetch(API + '/experiments', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     const data = await r.json();
 
     log.innerHTML = '';
@@ -353,7 +358,11 @@ async function runExperiment() {
       result.innerHTML = '<div class="card"><p style="color:var(--amber)">No verified candidate found. Try increasing generations.</p></div>';
     }
   } catch(e) {
-    log.innerHTML = `<div class="event" style="color:var(--red)">Error: ${e.message}</div>`;
+    clearTimeout(timeoutId);
+    let msg = e.message;
+    if (e.name === 'AbortError') msg = 'Request timed out (120s). Try smaller population/generations.';
+    else if (msg === 'Failed to fetch') msg = 'Server not reachable. Make sure start.sh is running.';
+    log.innerHTML = `<div class="event" style="color:var(--red)">Error: ${msg}</div>`;
   }
   btn.disabled = false;
   btn.textContent = 'Run Experiment';
