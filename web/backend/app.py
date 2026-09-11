@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from algorithm_discovery_lab.config.experiment import ExperimentConfig
+from algorithm_discovery_lab.config.experiment import ExperimentConfig, SearchConfig
 from algorithm_discovery_lab.core.candidate import Candidate, CandidateState
 from algorithm_discovery_lab.experiments.runner import ExperimentRunner
 from algorithm_discovery_lab.problems.sorting_network import SortingNetworkProblem
@@ -80,7 +80,7 @@ async def create_experiment(req: DiscoverRequest) -> dict[str, Any]:
     config = ExperimentConfig(
         problem_type="sorting_network",
         n=req.n,
-        search=ExperimentConfig.search.__class__(
+        search=SearchConfig(
             algorithm=req.search,
             population_size=req.population,
             generations=req.generations,
